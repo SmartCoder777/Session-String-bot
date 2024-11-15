@@ -1,4 +1,3 @@
-#devggn
 
 tgcrypto
 pyrogram
